@@ -1,4 +1,5 @@
 import { dbProducts, dbInsets } from "../db.js";
+import NotFoundError from "../domain/errors/not-found-error-massage.js";
 
 const products = [
   {
@@ -76,65 +77,87 @@ const products = [
 ];
 
 //Get: Get all products
-export const getProducts = (req, res) => {
-  dbProducts.find({}).then((data) => {
-    res.status(200).json(data);
-  });
+export const getProducts = (req, res, next) => {
+  try {
+    dbProducts.find({}).then((data) => {
+      return res.status(200).json(data);
+    });
+  } catch (error) {
+    next(error);
+  }
 };
 
 //POST: save new Product
-export const saveProduct = (req, res) => {
-  const newProduct = req.body;
-  const name = newProduct.name;
+export const saveProduct = (req, res, next) => {
+  try {
+    const newProduct = req.body;
 
-  //products.push(newProduct);
-  dbInsets(newProduct);
-  res
-    .status(201)
-    .send({ message: "Product saved successfully", product: newProduct });
+    dbInsets(newProduct);
+    return res
+      .status(201)
+      .send({ message: "Product saved successfully", product: newProduct });
+  } catch (error) {
+    next(error);
+  }
 };
 
 //DELETE: Delete the specific product
-export const deleteProduct = (req, res) => {
-  const id = req.params.id;
-  const index = products.findIndex((pro) => pro.id == id);
+export const deleteProduct = (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const index = products.findIndex((pro) => pro.id == id);
 
-  if (index !== -1) {
-    products.splice(index, 1); // Remove the user from the array
-    res.status(200).send({ message: "Product deleted." });
-  } else {
-    res.status(404).send({ message: "Product not found" });
+    if (index !== -1) {
+      products.splice(index, 1); // Remove the user from the array
+      return res.status(200).send({ message: "Product deleted." });
+    } else {
+      throw new NotFoundError("Product not found");
+      //return res.send({ message: new NotFoundError("Product not found") });
+    }
+  } catch (error) {
+    next(error);
   }
-
 };
 
 //PUT: Update entier product
-export const updateProduct = (req, res) => {
-  const id = req.params.id;
-  const updatedProduct = req.body;
-  const index = products.findIndex((product) => product.id == id);
+export const updateProduct = (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const updatedProduct = req.body;
+    const index = products.findIndex((product) => product.id == id);
 
-  if (index !== 1) {
-    products[index] = { id: id, ...updatedProduct };
-    res.status(200).send({
-      message: "Product updated successfully",
-      product: products[index],
-    });
-  } else {
-    res.status(404).send({ message: "Product not found" });
+    if (index !== 1) {
+      products[index] = { id: id, ...updatedProduct };
+      return res.status(200).send({
+        message: "Product updated successfully",
+        product: products[index],
+      });
+    } else {
+      throw new NotFoundError("Product not found");
+      //return res.send({ message: new NotFoundError("Product not found") });
+    }
+  } catch (error) {
+    next(error);
   }
 };
 
 //PATCH: Update part of the product
-export const patchProduct = (req, res) => {
-  const id = req.params.id;
-  const updatedProduct = req.body;
-  const product = products.find((product) => product.id == id);
+export const patchProduct = (req, res, next) => {
+  try {
+    const id = req.params.id;
+    const updatedProduct = req.body;
+    const product = products.find((product) => product.id == id);
 
-  if (product) {
-    Object.assign(product, updatedProduct);
-    res.status(200).send({ message: "Product updated successfully", product });
-  } else {
-    res.status(404).send({ message: "Product not found" });
+    if (product) {
+      Object.assign(product, updatedProduct);
+      return res
+        .status(200)
+        .send({ message: "Product updated successfully", product });
+    } else {
+      throw new NotFoundError("Product not found");
+      //return res.send({ message: new NotFoundError("Product not found") });
+    }
+  } catch (error) {
+    next(error);
   }
 };
